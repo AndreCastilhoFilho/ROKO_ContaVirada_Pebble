@@ -2,6 +2,7 @@
 #include "main.h"
 #include "common.h"
 #include "turn.h"
+#include "settings.h"
 #define PERSIST_KEY_LAUNCHES 10
 #define TAP_NOT_DATA false
 #define NUM_SAMPLES 1
@@ -20,7 +21,7 @@ static DataLoggingSessionRef  s_log_data, s_log_ref ;
 int lap_count = 0;
 static BUFFER * s_Buffer;
 static char buffer_data [13];
-
+static AccelSamplingRate accel_sample_rate = ACCEL_SAMPLING_25HZ;
 
 
 // Actually keeping track of time
@@ -65,6 +66,7 @@ static void data_handler(AccelData *data, uint32_t num_samples) {
   {
     if(!isReading)
     {
+      if(startTime == 0)
       startTime = data[0].timestamp;
       isReading = true;
       APP_LOG(APP_LOG_LEVEL_INFO, "is reading %d", isReading);
@@ -72,9 +74,7 @@ static void data_handler(AccelData *data, uint32_t num_samples) {
   }  
   
 // Long lived buffer
-  static char s_buffer[128];
-// time_t now = time(NULL);
-//  CompassHeadingData *compassData = malloc(sizeof(*compassData));
+  static char s_buffer_layer[11];
 
   if (startTime==0) {
     startTime = data[0].timestamp;
@@ -84,28 +84,24 @@ static void data_handler(AccelData *data, uint32_t num_samples) {
   
   data[0].timestamp = internalTime;
   
-   //APP_LOG(APP_LOG_LEVEL_ERROR, "internal_time: %d ",internalTime );
-//int stroke_count =   countStroke(data,INIT_DESC_THRESHOLD);
-  
-  text_layer_set_text(s_intro_layer, s_buffer);  
+
 
   if (!data[0].did_vibrate ) {  
   
-  //  s_data->h = compassData->magnetic_heading;
-      
+ 
     
     contaViradas(data[0].x, data[0].y, data[0].z, data[0].timestamp, s_Buffer); 
     
-   
+ 
      lap_count = s_Buffer->count * 25  ;
-    
-   // Compose string of all data
-  snprintf(s_buffer, sizeof(s_buffer), 
+      //  APP_LOG(APP_LOG_LEVEL_INFO, "lap count after %i",lap_count ); 
+
+  snprintf(s_buffer_layer, sizeof(s_buffer_layer), 
   " %d\n", 
    lap_count
   );
-
-  
+  text_layer_set_text(s_intro_layer, s_buffer_layer);  
+   
   
   }
  // free(compassData);
@@ -119,7 +115,8 @@ static  void start_accel_reading()
     toggle_reader = true;    
  
     accel_data_service_subscribe(NUM_SAMPLES, data_handler) ;
-    accel_service_set_sampling_rate(ACCEL_SAMPLING_25HZ); 
+    APP_LOG(APP_LOG_LEVEL_INFO, "starting accel sample %i ", (int)accel_sample_rate );   
+    accel_service_set_sampling_rate(accel_sample_rate); 
   
 }
 
@@ -139,7 +136,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 	  	strftime (buffer_data,13,"%d%m%y%H%M%S\n",timeinfo);   
     
       s_log_data = data_logging_create(101, DATA_LOGGING_BYTE_ARRAY, sizeof(buffer_data), false);    
-      DataLoggingResult rlog_data = data_logging_log(s_log_data , buffer_data , 1);      
+      data_logging_log(s_log_data , buffer_data , 1);      
       
     
      //   APP_LOG(APP_LOG_LEVEL_INFO, "date : %s  log result: %i",buffer_data, (int)rlog_data);     
@@ -155,11 +152,9 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   stop_stopwatch();
-  //reset_counter();
- // free(s_Buffer);
- // s_Buffer =  (BUFFER*) malloc(sizeof(BUFFER));
+ 
   inicializaBuffers(s_Buffer);
-   text_layer_set_text(s_intro_layer, " 0\n 0");  
+   text_layer_set_text(s_intro_layer, " 0");  
  
     
 start_time = 0;
@@ -247,7 +242,8 @@ inicializaBuffers(s_Buffer);
  //init_counter();
 }
 void start_stopwatch() {
-    started = true;
+    started = true;  
+  
 	if(start_time == 0) {
 		start_time = float_time_ms();
 	} else if(pause_time != 0) {
@@ -264,6 +260,8 @@ void stop_stopwatch() {
         app_timer_cancel(update_timer);
         update_timer = NULL;
     }
+
+   
 }
 
 void update_stopwatch() {
@@ -320,6 +318,7 @@ text_layer_destroy(seconds_time_layer);
 
 int main(void) {
   init();
+  init_menu_settings()  ;  
   app_event_loop();
   deinit();
 }
@@ -328,5 +327,10 @@ int main(void) {
 DataLoggingSessionRef getDataLog()
 {
   return s_log_ref;
+  
+}
+
+void  set_sampling_rate(AccelSamplingRate rate){
+  accel_sample_rate = rate;
   
 }

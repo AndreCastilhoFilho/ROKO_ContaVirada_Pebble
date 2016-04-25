@@ -164,6 +164,7 @@ void inicializaBuffers (BUFFER * buf ) {
   buf->status = 0;
   buf->count = 0;
   buf->p = 0;
+  APP_LOG(APP_LOG_LEVEL_INFO, "buffer inicializado");   
 }
 
 int32_t tangent_pitch (int32_t xacc, int32_t yacc, int32_t zacc) {
@@ -220,7 +221,7 @@ bool virada = false;
       APP_LOG(APP_LOG_LEVEL_ERROR, "Error datalogging: %d",(int)logggg);
     }       
 
-    
+//     APP_LOG(APP_LOG_LEVEL_INFO, "free: %d",(int) heap_bytes_free());
   
  
   
