@@ -26,7 +26,7 @@ struct _buffers {
 };
 
 void contaViradas (int32_t xacc, int32_t yacc, int32_t zacc, int32_t time, BUFFER * buf);
-void inicializaBuffers (BUFFER * buf);
+void inicializaBuffers (BUFFER * buf, DataLoggingSessionRef data_logging);
 
 
 

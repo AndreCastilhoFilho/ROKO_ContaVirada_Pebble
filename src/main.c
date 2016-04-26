@@ -73,7 +73,6 @@ static void data_handler(AccelData *data, uint32_t num_samples) {
     }    
   }  
   
-// Long lived buffer
   static char s_buffer_layer[11];
 
   if (startTime==0) {
@@ -87,16 +86,14 @@ static void data_handler(AccelData *data, uint32_t num_samples) {
 
 
   if (!data[0].did_vibrate ) {  
-  
- 
-    
+      
     contaViradas(data[0].x, data[0].y, data[0].z, data[0].timestamp, s_Buffer); 
-    
- 
+     
      lap_count = s_Buffer->count * 25  ;
+    
       //  APP_LOG(APP_LOG_LEVEL_INFO, "lap count after %i",lap_count ); 
 
-  snprintf(s_buffer_layer, sizeof(s_buffer_layer), 
+  snprintf(s_buffer_layer, sizeof(s_buffer_layer),            
   " %d\n", 
    lap_count
   );
@@ -108,8 +105,6 @@ static void data_handler(AccelData *data, uint32_t num_samples) {
 }
 static  void start_accel_reading()
 {
-
-  
   
   start_stopwatch();
     toggle_reader = true;    
@@ -121,11 +116,10 @@ static  void start_accel_reading()
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  	layer_set_hidden((Layer*)text_layer_start , true  ) ;   
-  
- // text_layer_set_text(s_output_layer, "Select pressed!");
+  	layer_set_hidden((Layer*)text_layer_start , true  ) ;    
+ 
    toggle_reader = toggle_reader ? false: true;
-  // APP_LOG(APP_LOG_LEVEL_INFO, "TOGGLE");
+
   
   if(toggle_reader)
     {
@@ -136,11 +130,8 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 	  	strftime (buffer_data,13,"%d%m%y%H%M%S\n",timeinfo);   
     
       s_log_data = data_logging_create(101, DATA_LOGGING_BYTE_ARRAY, sizeof(buffer_data), false);    
-      data_logging_log(s_log_data , buffer_data , 1);      
-      
-    
-     //   APP_LOG(APP_LOG_LEVEL_INFO, "date : %s  log result: %i",buffer_data, (int)rlog_data);     
-      
+      data_logging_log(s_log_data , buffer_data , 1);           
+           
     }
    start_accel_reading();
     APP_LOG(APP_LOG_LEVEL_INFO, "################## STARTED #######################");    
@@ -153,7 +144,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   stop_stopwatch();
  
-  inicializaBuffers(s_Buffer);
+  inicializaBuffers(s_Buffer, s_log_ref);
    text_layer_set_text(s_intro_layer, " 0");  
  
     
@@ -236,7 +227,7 @@ static void init() {
   
 s_Buffer =  (BUFFER *)  malloc(sizeof(BUFFER)) ;
   
-inicializaBuffers(s_Buffer);
+inicializaBuffers(s_Buffer, s_log_ref);
   
   
  //init_counter();
@@ -323,12 +314,6 @@ int main(void) {
   deinit();
 }
 
-
-DataLoggingSessionRef getDataLog()
-{
-  return s_log_ref;
-  
-}
 
 void  set_sampling_rate(AccelSamplingRate rate){
   accel_sample_rate = rate;

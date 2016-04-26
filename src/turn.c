@@ -1,6 +1,8 @@
 #include <pebble.h>
 #include "turn.h"
-#include "main.h"
+
+
+static DataLoggingSessionRef _data_logging;
 
 static int32_t table[] = {
      0,    16,  22,  27,  32,  35,  39,  42,  45,  48,  50,  53,  55,  57,
@@ -157,13 +159,15 @@ void QUEUEinitialize(struct queue * q, int32_t size) {
   q->count = 0;
 }
 
-void inicializaBuffers (BUFFER * buf ) {
+void inicializaBuffers (BUFFER * buf , DataLoggingSessionRef data_logging) {
   QUEUEinitialize(&(buf->pitches),175);
   buf->lastTurnTime = 0;
   buf->d2 = 0;
   buf->status = 0;
   buf->count = 0;
   buf->p = 0;
+  _data_logging = data_logging;
+  
   APP_LOG(APP_LOG_LEVEL_INFO, "buffer inicializado");   
 }
 
@@ -196,8 +200,7 @@ bool virada = false;
     buf->status = 0;
     buf->lastTurnTime = time;
   }
-  
-  
+   
     
    LOG *s_data = malloc(sizeof(*s_data));
   
@@ -210,10 +213,8 @@ bool virada = false;
        s_data-> status = virada;
       
 
-
-    DataLoggingResult logggg = data_logging_log(getDataLog(), s_data , 1);
-    
-    // APP_LOG(APP_LOG_LEVEL_INFO, "t: %i\n x: %i\n y: %i\n z: %i\ndelta: %i\ntang: %i\nstatus: %i", (int)s_data-> time,(int)s_data-> x ,(int) s_data-> y,(int) s_data-> z, (int)s_data-> delta, (int)s_data-> tang, (int)s_data-> status);
+    DataLoggingResult logggg = data_logging_log(_data_logging, s_data , 1);    
+   
   
     free(s_data);
     
@@ -221,7 +222,6 @@ bool virada = false;
       APP_LOG(APP_LOG_LEVEL_ERROR, "Error datalogging: %d",(int)logggg);
     }       
 
-//     APP_LOG(APP_LOG_LEVEL_INFO, "free: %d",(int) heap_bytes_free());
   
  
   
